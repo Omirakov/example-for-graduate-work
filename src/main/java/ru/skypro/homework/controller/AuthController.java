@@ -24,7 +24,10 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @Operation(summary = "Авторизация пользователя", description = "Выполняет вход пользователя в систему по логину и паролю", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json", schema = @Schema(implementation = Login.class))), responses = {@ApiResponse(responseCode = "200", description = "Успешный вход"), @ApiResponse(responseCode = "401", description = "Неверные учётные данные")})
+    @Operation(summary = "Авторизация пользователя", description = "Выполняет вход пользователя в систему по логину и паролю", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json", schema = @Schema(implementation = Login.class))), responses = {
+            @ApiResponse(responseCode = "200", description = "Успешный вход"),
+            @ApiResponse(responseCode = "401", description = "Неверные учётные данные")
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Login login) {
         if (authService.login(login.getUsername(), login.getPassword())) {
@@ -34,7 +37,10 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "Регистрация пользователя", description = "Создаёт нового пользователя с уникальным логином", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json", schema = @Schema(implementation = Register.class))), responses = {@ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"), @ApiResponse(responseCode = "400", description = "Логин уже занят или данные некорректны")})
+    @Operation(summary = "Регистрация пользователя", description = "Создаёт нового пользователя с уникальным логином", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = "application/json", schema = @Schema(implementation = Register.class))), responses = {
+            @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"),
+            @ApiResponse(responseCode = "400", description = "Логин уже занят или данные некорректны")
+    })
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Register register) {
         if (authService.register(register)) {
