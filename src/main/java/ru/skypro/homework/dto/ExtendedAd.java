@@ -21,7 +21,7 @@ public class ExtendedAd {
     @Schema(description = "Email автора объявления", example = "user@gmail.com")
     private String email;
 
-    @Schema(description = "Ссылка на картинку объявления", example = "/images/ad/1.jpg")
+    @Schema(description = "Ссылка на картинку объявления", example = "/ads/1/image")
     private String image;
 
     @Schema(description = "Телефон автора объявления", example = "+79991234567")
@@ -32,4 +32,7 @@ public class ExtendedAd {
 
     @Schema(description = "Заголовок объявления", example = "Велосипед")
     private String title;
+
+    @Schema(description = "Ссылка на аватар автора", example = "/users/1/image")
+    private String authorImage;
 }

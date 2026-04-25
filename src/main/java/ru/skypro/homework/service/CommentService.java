@@ -5,7 +5,10 @@ import ru.skypro.homework.dto.Comments;
 
 public interface CommentService {
     Comments getComments(Integer adId);
+
     Comment addComment(Integer adId, Comment comment, String username);
-    void deleteComment(Integer adId, Integer commentId);
-    Comment updateComment(Integer adId, Integer commentId, Comment comment);
+
+    void deleteComment(Integer adId, Integer commentId, String email);
+
+    Comment updateComment(Integer adId, Integer commentId, Comment comment, String email);
 }

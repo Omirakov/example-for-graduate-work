@@ -2,6 +2,7 @@ package ru.skypro.homework.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import ru.skypro.homework.dto.User;
 import ru.skypro.homework.entity.UserEntity;
 
@@ -14,7 +15,7 @@ public interface UserMapper {
     @Mapping(source = "lastName", target = "lastName")
     @Mapping(source = "phone", target = "phone")
     @Mapping(source = "role", target = "role")
-    @Mapping(expression = "java(\"/images/user/\" + userEntity.getId() + \".jpg\")", target = "image")
+    @Mapping(expression = "java(\"/users/\" + userEntity.getId() + \"/image\")", target = "image")
     User toDto(UserEntity userEntity);
 
     @Mapping(target = "password", ignore = true)

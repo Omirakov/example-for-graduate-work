@@ -5,7 +5,6 @@ import org.mapstruct.Mapping;
 import ru.skypro.homework.dto.Ad;
 import ru.skypro.homework.dto.ExtendedAd;
 import ru.skypro.homework.entity.AdEntity;
-import ru.skypro.homework.entity.UserEntity;
 
 @Mapper(componentModel = "spring")
 public interface AdMapper {
@@ -14,7 +13,7 @@ public interface AdMapper {
     @Mapping(source = "title", target = "title")
     @Mapping(source = "price", target = "price")
     @Mapping(source = "author.id", target = "author")
-    @Mapping(expression = "java(\"/images/ad/\" + adEntity.getPk() + \".jpg\")", target = "image")
+    @Mapping(expression = "java(\"/ads/\" + adEntity.getPk() + \"/image\")", target = "image")
     Ad toDto(AdEntity adEntity);
 
     @Mapping(source = "pk", target = "pk")
@@ -25,8 +24,8 @@ public interface AdMapper {
     @Mapping(source = "author.lastName", target = "authorLastName")
     @Mapping(source = "author.email", target = "email")
     @Mapping(source = "author.phone", target = "phone")
-    @Mapping(expression = "java(\"/images/user/\" + adEntity.getAuthor().getId() + \".jpg\")", target = "authorImage")
-    @Mapping(expression = "java(\"/images/ad/\" + adEntity.getPk() + \".jpg\")", target = "image")
+    @Mapping(expression = "java(\"/users/\" + adEntity.getAuthor().getId() + \"/image\")", target = "authorImage")
+    @Mapping(expression = "java(\"/ads/\" + adEntity.getPk() + \"/image\")", target = "image")
     ExtendedAd toExtendedDto(AdEntity adEntity);
 
     @Mapping(target = "pk", ignore = true)

@@ -31,6 +31,9 @@ public class AdEntity {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column
+    private String imagePath; // <-- новое поле
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private UserEntity author;

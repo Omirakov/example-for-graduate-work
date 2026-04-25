@@ -29,16 +29,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUser(String email) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return userMapper.toDto(user);
     }
 
     @Override
     @Transactional
     public User updateUser(String email, UpdateUser updateUser) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         user.setFirstName(updateUser.getFirstName());
         user.setLastName(updateUser.getLastName());
@@ -51,8 +49,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updatePassword(String email, NewPassword newPassword) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(newPassword.getCurrentPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Current password is incorrect");
@@ -65,8 +62,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updateImage(String email, byte[] image) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Integer userId = user.getId();
         Path dir = Paths.get(IMAGE_DIR);
@@ -77,6 +73,10 @@ public class UserServiceImpl implements UserService {
                 Files.createDirectories(dir);
             }
             Files.write(imagePath, image);
+
+            user.setImagePath("/users/" + userId + "/image");
+            userRepository.save(user);
+
         } catch (IOException e) {
             throw new RuntimeException("Failed to save user image", e);
         }
