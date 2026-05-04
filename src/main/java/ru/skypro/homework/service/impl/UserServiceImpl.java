@@ -4,28 +4,29 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.skypro.homework.dto.NewPassword;
 import ru.skypro.homework.dto.UpdateUser;
 import ru.skypro.homework.dto.User;
 import ru.skypro.homework.entity.UserEntity;
+import ru.skypro.homework.exception.EntityNotFoundException;
 import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
+import ru.skypro.homework.service.ImageService;
 import ru.skypro.homework.service.UserService;
 
-import javax.transaction.Transactional;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private static final String IMAGE_DIR = "src/main/resources/images/user/";
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ImageService imageService;
 
     @Override
     public User getUser(String email) {
@@ -60,25 +61,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
-    public void updateImage(String email, byte[] image) {
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        Integer userId = user.getId();
-        Path dir = Paths.get(IMAGE_DIR);
-        Path imagePath = dir.resolve(userId + ".jpg");
-
-        try {
-            if (!Files.exists(dir)) {
-                Files.createDirectories(dir);
-            }
-            Files.write(imagePath, image);
-
-            user.setImagePath("/users/" + userId + "/image");
-            userRepository.save(user);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save user image", e);
-        }
+    public void updateUserImage(String email, byte[] image) throws IOException {
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+        imageService.saveUserImage(user.getId(), image);
     }
 }

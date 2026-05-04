@@ -5,93 +5,84 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import ru.skypro.homework.dto.*;
+import org.springframework.web.multipart.MultipartFile;
+import ru.skypro.homework.dto.Ad;
+import ru.skypro.homework.dto.Ads;
+import ru.skypro.homework.dto.CreateOrUpdateAd;
+import ru.skypro.homework.dto.ExtendedAd;
 import ru.skypro.homework.entity.AdEntity;
+import ru.skypro.homework.mapper.AdMapper;
 import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.ImageService;
 
-import java.util.NoSuchElementException;
+import javax.validation.Valid;
+import java.io.IOException;
 
 @RestController
+@CrossOrigin(value = "http://localhost:3000")
 @RequestMapping("/ads")
 @Tag(name = "Объявления", description = "API для работы с объявлениями")
+@RequiredArgsConstructor
 public class AdController {
 
     private final AdService adService;
+    private final ImageService imageService;
+    private final AdMapper adMapper; // Добавлено: теперь используется adMapper
 
-    public AdController(AdService adService) {
-        this.adService = adService;
-    }
-
-    @Operation(summary = "Получение всех объявлений", description = "Возвращает список всех объявлений", responses = {@ApiResponse(responseCode = "200", description = "Успешный ответ", content = @Content(schema = @Schema(implementation = Ads.class)))})
+    @Operation(summary = "Получение всех объявлений", responses = {@ApiResponse(responseCode = "200", description = "Успешный ответ", content = @Content(schema = @Schema(implementation = Ad.class)))})
     @GetMapping
     public ResponseEntity<Ads> getAllAds() {
         return ResponseEntity.ok(adService.getAllAds());
     }
 
-    @Operation(summary = "Добавление объявления", description = "Создаёт новое объявление с заголовком, ценой, описанием и изображением", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Форма с данными объявления и изображением", required = true, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(type = "object", description = "Объект, содержащий поля 'properties' и 'image'"))), responses = {@ApiResponse(responseCode = "201", description = "Объявление успешно создано", content = @Content(schema = @Schema(implementation = Ad.class))), @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")})
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Создание объявления", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)), responses = {@ApiResponse(responseCode = "201", description = "Объявление создано"), @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")})
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Ad> addAd(@RequestPart("properties") CreateOrUpdateAd properties, @RequestPart("image") byte[] image, Authentication authentication) {
-        AdEntity adEntity = new AdEntity();
-        adEntity.setTitle(properties.getTitle());
-        adEntity.setPrice(properties.getPrice());
-        adEntity.setDescription(properties.getDescription());
+    public ResponseEntity<Ad> createAd(@RequestPart("properties") @Valid CreateOrUpdateAd createOrUpdateAd, @RequestPart("image") MultipartFile image, Authentication authentication) throws IOException {
 
-        Ad createdAd = adService.createAd(adEntity, authentication.getName());
-        adService.updateImage(createdAd.getPk(), image);
+        AdEntity ad = adMapper.toEntity(createOrUpdateAd);
+        Ad createdAd = adService.createAd(ad, authentication.getName());
+        imageService.saveAdImage(createdAd.getPk(), image.getBytes());
 
-        return ResponseEntity.status(201).body(createdAd);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAd);
     }
 
-    @Operation(summary = "Получение информации об объявлении", description = "Возвращает полную информацию об объявлении по его ID", responses = {@ApiResponse(responseCode = "200", description = "Успешный ответ", content = @Content(schema = @Schema(implementation = ExtendedAd.class))), @ApiResponse(responseCode = "401", description = "Пользователь не авторизован"), @ApiResponse(responseCode = "404", description = "Объявление не найдено")})
+    @Operation(summary = "Получение информации об объявлении", responses = {@ApiResponse(responseCode = "200", description = "Успешный ответ", content = @Content(schema = @Schema(implementation = ExtendedAd.class))), @ApiResponse(responseCode = "404", description = "Объявление не найдено")})
     @GetMapping("/{id}")
-    public ResponseEntity<ExtendedAd> getAds(@PathVariable("id") Integer id) {
-        try {
-            ExtendedAd extendedAd = adService.getExtendedAd(id);
-            return ResponseEntity.ok(extendedAd);
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ExtendedAd> getAd(@PathVariable Integer id) {
+        ExtendedAd ad = adService.getExtendedAd(id);
+        return ResponseEntity.ok(ad);
     }
 
-    @Operation(summary = "Удаление объявления", description = "Удаляет объявление по ID (только для автора или администратора)", responses = {@ApiResponse(responseCode = "204", description = "Объявление успешно удалено"), @ApiResponse(responseCode = "401", description = "Пользователь не авторизован"), @ApiResponse(responseCode = "403", description = "Доступ запрещён"), @ApiResponse(responseCode = "404", description = "Объявление не найдено")})
+    @Operation(summary = "Удаление объявления", responses = {@ApiResponse(responseCode = "204", description = "Объявление удалено"), @ApiResponse(responseCode = "403", description = "Доступ запрещён")})
     @DeleteMapping("/{id}")
-    @PreAuthorize("@adService.getExtendedAd(#id).author.email == authentication.name or hasRole('ADMIN')")
-    public ResponseEntity<Void> removeAd(@PathVariable("id") Integer id, Authentication authentication) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteAd(@PathVariable Integer id, Authentication authentication) {
         adService.deleteAd(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Обновление информации об объявлении", description = "Изменяет заголовок, цену и описание объявления", responses = {@ApiResponse(responseCode = "200", description = "Объявление успешно обновлено", content = @Content(schema = @Schema(implementation = Ad.class))), @ApiResponse(responseCode = "401", description = "Пользователь не авторизован"), @ApiResponse(responseCode = "403", description = "Доступ запрещён"), @ApiResponse(responseCode = "404", description = "Объявление не найдено")})
+    @Operation(summary = "Обновление информации об объявлении", responses = {@ApiResponse(responseCode = "200", description = "Объявление обновлено"), @ApiResponse(responseCode = "403", description = "Доступ запрещён")})
     @PatchMapping("/{id}")
-    @PreAuthorize("@adService.getExtendedAd(#id).author.email == authentication.name or hasRole('ADMIN')")
-    public ResponseEntity<Ad> updateAds(@PathVariable("id") Integer id, @RequestBody CreateOrUpdateAd createOrUpdateAd, Authentication authentication) {
-        AdEntity updatedAd = new AdEntity();
-        updatedAd.setTitle(createOrUpdateAd.getTitle());
-        updatedAd.setPrice(createOrUpdateAd.getPrice());
-        updatedAd.setDescription(createOrUpdateAd.getDescription());
-
-        Ad result = adService.updateAd(id, updatedAd, authentication.getName());
-        return ResponseEntity.ok(result);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Ad> updateAd(@PathVariable Integer id, @RequestBody CreateOrUpdateAd update, Authentication authentication) {
+        AdEntity adEntity = adMapper.toEntity(update);
+        Ad updatedAd = adService.updateAd(id, adEntity, authentication.getName());
+        return ResponseEntity.ok(updatedAd);
     }
 
-    @Operation(summary = "Получение объявлений авторизованного пользователя", description = "Возвращает список всех объявлений текущего пользователя", responses = {@ApiResponse(responseCode = "200", description = "Успешный ответ", content = @Content(schema = @Schema(implementation = Ads.class))), @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")})
-    @GetMapping("/me")
-    public ResponseEntity<Ads> getAdsMe(Authentication authentication) {
-        Ads ads = adService.getAdsByUser(authentication.getName());
-        return ResponseEntity.ok(ads);
-    }
-
-    @Operation(summary = "Обновление картинки объявления", description = "Заменяет изображение объявления", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Форма с новым изображением", required = true, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(type = "object", description = "Объект, содержащий поле 'image'"))), responses = {@ApiResponse(responseCode = "200", description = "Изображение успешно обновлено"), @ApiResponse(responseCode = "401", description = "Пользователь не авторизован"), @ApiResponse(responseCode = "403", description = "Доступ запрещён"), @ApiResponse(responseCode = "404", description = "Объявление не найдено")})
+    @Operation(summary = "Обновление изображения объявления", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)), responses = {@ApiResponse(responseCode = "200", description = "Изображение обновлено"), @ApiResponse(responseCode = "403", description = "Доступ запрещён")})
     @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("@adService.getExtendedAd(#id).author.email == authentication.name or hasRole('ADMIN')")
-    public ResponseEntity<byte[]> updateImage(@PathVariable("id") Integer id, @RequestPart("image") byte[] image) {
-        adService.updateImage(id, image);
-        return ResponseEntity.ok(image);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Ad> updateImage(@PathVariable Integer id, @RequestParam("image") MultipartFile image, Authentication authentication) throws IOException {
+        Ad updatedAd = adService.updateImage(id, image.getBytes(), authentication.getName());
+        return ResponseEntity.ok(updatedAd);
     }
 }

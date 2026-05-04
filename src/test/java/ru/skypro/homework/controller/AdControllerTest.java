@@ -124,13 +124,13 @@ public class AdControllerTest {
     @Test
     @WithMockUser(username = "user@test.com")
     void updateImage_ByAuthor_Success() throws Exception {
-        when(adService.updateImage(eq(1), any())).thenReturn(ad);
+        when(adService.updateImage(eq(1), any(byte[].class), eq("user@test.com"))).thenReturn(ad);
 
-        MockMultipartFile image = new MockMultipartFile("image", "image.jpg", "image/jpeg", "fake".getBytes());
+        MockMultipartFile image = new MockMultipartFile("image", "image.jpg", "image/jpeg", "fake-image-data".getBytes());
 
         mockMvc.perform(multipart("/ads/1/image").file(image).with(request -> {
             request.setMethod("PATCH");
             return request;
-        })).andExpect(status().isOk());
+        })).andExpect(status().isOk()).andExpect(jsonPath("$.pk").value(1)).andExpect(jsonPath("$.title").value("Test Ad"));
     }
 }

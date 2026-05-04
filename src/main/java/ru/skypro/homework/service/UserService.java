@@ -4,9 +4,14 @@ import ru.skypro.homework.dto.NewPassword;
 import ru.skypro.homework.dto.UpdateUser;
 import ru.skypro.homework.dto.User;
 
+import java.io.IOException;
+
 public interface UserService {
     User getUser(String email);
+
     User updateUser(String email, UpdateUser updateUser);
+
     void updatePassword(String email, NewPassword newPassword);
-    void updateImage(String email, byte[] image);
+
+    void updateUserImage(String email, byte[] image) throws IOException;
 }

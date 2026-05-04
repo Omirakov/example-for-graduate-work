@@ -57,12 +57,14 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteComment(Integer adId, Integer commentId, String email) {
-        CommentEntity comment = commentRepository.findById(commentId).orElseThrow(() -> new EntityNotFoundException("Комментарий с ID " + commentId + " не найден"));
+        CommentEntity comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Комментарий не найден"));
 
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
 
         if (!comment.getAuthor().getId().equals(user.getId()) && !user.getRole().name().equals("ADMIN")) {
-            throw new AccessDeniedException("У вас нет прав на удаление этого комментария");
+            throw new AccessDeniedException("Нет прав на удаление");
         }
 
         commentRepository.deleteById(commentId);

@@ -41,9 +41,6 @@ public class UserEntity implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
-    @Column
-    private String imagePath; // <-- новое поле
-
     @OneToMany(mappedBy = "author", fetch = FetchType.LAZY)
     private List<AdEntity> ads;
 

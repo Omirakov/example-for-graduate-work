@@ -5,6 +5,8 @@ import ru.skypro.homework.dto.Ads;
 import ru.skypro.homework.dto.ExtendedAd;
 import ru.skypro.homework.entity.AdEntity;
 
+import java.io.IOException;
+
 public interface AdService {
     Ads getAllAds();
 
@@ -18,5 +20,5 @@ public interface AdService {
 
     Ads getAdsByUser(String email);
 
-    Ad updateImage(Integer id, byte[] image);
+    Ad updateImage(Integer id, byte[] image, String email) throws IOException;
 }
