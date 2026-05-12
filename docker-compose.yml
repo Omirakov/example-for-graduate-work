@@ -8,8 +8,9 @@ services:
       - "8080:8080"
     volumes:
       - ./uploads:/uploads
+      - ./data:/app/data  # ← Сохраняем БД вне контейнера
     environment:
-      - SPRING_PROFILES_ACTIVE=postgres
+      - SPRING_PROFILES_ACTIVE=h2
     networks:
       - ads-network
 

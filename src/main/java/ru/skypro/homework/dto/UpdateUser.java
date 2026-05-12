@@ -10,14 +10,14 @@ import javax.validation.constraints.Size;
 @Data
 @Schema(description = "Данные для обновления профиля пользователя")
 public class UpdateUser {
-    @Schema(description = "Имя пользователя", example = "Иван", minLength = 2, maxLength = 16)
+    @Schema(description = "Имя пользователя", example = "Иван", minLength = 3, maxLength = 10)
     @NotBlank(message = "Имя обязательно")
-    @Size(min = 2, max = 16, message = "Имя должно быть от 2 до 16 символов")
+    @Size(min = 3, max = 10, message = "Имя должно быть от 3 до 10 символов")
     private String firstName;
 
-    @Schema(description = "Фамилия пользователя", example = "Иванов", minLength = 2, maxLength = 16)
+    @Schema(description = "Фамилия пользователя", example = "Иванов", minLength = 3, maxLength = 10)
     @NotBlank(message = "Фамилия обязательна")
-    @Size(min = 2, max = 16, message = "Фамилия должна быть от 2 до 16 символов")
+    @Size(min = 3, max = 10, message = "Фамилия должна быть от 3 до 10 символов")
     private String lastName;
 
     @Schema(description = "Телефон пользователя", example = "+7 (999) 123-45-67", pattern = "\\+7\\s?\\(?\\d{3}\\)?\\s?\\d{3}-?\\d{2}-?\\d{2}")

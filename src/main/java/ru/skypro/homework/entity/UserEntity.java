@@ -52,6 +52,9 @@ public class UserEntity implements UserDetails {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
+    /**
+     * В системе логин = email
+     */
     @Override
     public String getUsername() {
         return email;

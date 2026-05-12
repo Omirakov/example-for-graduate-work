@@ -6,43 +6,58 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.skypro.homework.dto.Comment;
 import ru.skypro.homework.entity.CommentEntity;
 import ru.skypro.homework.entity.UserEntity;
-import ru.skypro.homework.entity.AdEntity;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-public class CommentMapperTest {
+@SpringBootTest(classes = CommentMapperImpl.class)
+class CommentMapperTest {
 
     @Autowired
-    private CommentMapper commentMapper;
+    private CommentMapper mapper;
 
     @Test
-    void toDto_ShouldMapCommentEntityToCommentDto() {
+    void toDto_shouldMapCommentEntityToCommentDto() {
+        // Given
         UserEntity author = new UserEntity();
         author.setId(1);
-        author.setFirstName("Ivan");
-        author.setImagePath("/users/1/image");
-
-        AdEntity ad = new AdEntity();
-        ad.setPk(100);
+        author.setFirstName("Иван");
 
         CommentEntity commentEntity = new CommentEntity();
-        commentEntity.setPk(10);
-        commentEntity.setText("Great deal!");
+        commentEntity.setPk(100);
+        commentEntity.setText("Отличное объявление!");
+        commentEntity.setCreatedAt(LocalDateTime.of(2023, 10, 1, 12, 0, 0));
         commentEntity.setAuthor(author);
-        commentEntity.setAd(ad);
-        commentEntity.setCreatedAt(LocalDateTime.now());
 
-        Comment dto = commentMapper.toDto(commentEntity);
+        // When
+        Comment result = mapper.toDto(commentEntity);
 
-        assertNotNull(dto);
-        assertEquals(10, dto.getPk());
-        assertEquals("Great deal!", dto.getText());
-        assertEquals(1, dto.getAuthor());
-        assertEquals("Ivan", dto.getAuthorFirstName());
-        assertEquals("/users/1/image", dto.getAuthorImage());
-        assertNotNull(dto.getCreatedAt());
+        // Then
+        assertThat(result.getPk()).isEqualTo(100);
+        assertThat(result.getText()).isEqualTo("Отличное объявление!");
+        assertThat(result.getAuthor()).isEqualTo(1);
+        assertThat(result.getAuthorFirstName()).isEqualTo("Иван");
+        assertThat(result.getAuthorImage()).isEqualTo("/users/1/image");
+
+        long expectedTimestamp = commentEntity.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        assertThat(result.getCreatedAt()).isEqualTo(expectedTimestamp);
+    }
+
+    @Test
+    void toEntity_shouldMapCommentDtoToCommentEntity() {
+        // Given
+        Comment comment = new Comment();
+        comment.setText("Хочу купить!");
+
+        // When
+        CommentEntity result = mapper.toEntity(comment);
+
+        // Then
+        assertThat(result.getText()).isEqualTo("Хочу купить!");
+        assertThat(result.getPk()).isNull(); // игнорируется, генерируется БД
+        assertThat(result.getCreatedAt()).isNotNull(); // устанавливается через expression = "java(LocalDateTime.now())"
+        assertThat(result.getAd()).isNull(); // устанавливается сервисом
+        assertThat(result.getAuthor()).isNull(); // устанавливается из контекста аутентификации
     }
 }

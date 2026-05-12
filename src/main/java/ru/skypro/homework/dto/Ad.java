@@ -9,7 +9,7 @@ public class Ad {
     @Schema(description = "ID автора объявления", example = "1")
     private Integer author;
 
-    @Schema(description = "Ссылка на картинку объявления", example = "/images/ad/1.jpg")
+    @Schema(description = "Ссылка на картинку объявления", example = "/image/ad/1")
     private String image;
 
     @Schema(description = "ID объявления", example = "1")

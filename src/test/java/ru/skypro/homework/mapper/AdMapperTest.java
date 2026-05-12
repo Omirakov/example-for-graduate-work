@@ -4,71 +4,77 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.skypro.homework.dto.Ad;
+import ru.skypro.homework.dto.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ExtendedAd;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.UserEntity;
 
-import java.time.LocalDateTime;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-@SpringBootTest
-public class AdMapperTest {
+@SpringBootTest(classes = AdMapperImpl.class)
+class AdMapperTest {
 
     @Autowired
-    private AdMapper adMapper;
+    private AdMapper mapper;
 
     @Test
-    void toDto_ShouldMapAdEntityToAdDto() {
+    void toDto_shouldMapAdEntityToAdDto() {
         UserEntity author = new UserEntity();
         author.setId(1);
 
         AdEntity adEntity = new AdEntity();
-        adEntity.setPk(100);
-        adEntity.setTitle("Laptop");
-        adEntity.setPrice(500);
+        adEntity.setPk(1);
+        adEntity.setTitle("Велосипед");
+        adEntity.setPrice(10000);
         adEntity.setAuthor(author);
-        adEntity.setCreatedAt(LocalDateTime.now());
 
-        Ad dto = adMapper.toDto(adEntity);
+        Ad result = mapper.toDto(adEntity);
 
-        assertNotNull(dto);
-        assertEquals(100, dto.getPk());
-        assertEquals("Laptop", dto.getTitle());
-        assertEquals(500, dto.getPrice());
-        assertEquals("/ads/100/image", dto.getImage());
-        assertEquals(1, dto.getAuthor());
+        assertThat(result.getPk()).isEqualTo(1);
+        assertThat(result.getTitle()).isEqualTo("Велосипед");
+        assertThat(result.getPrice()).isEqualTo(10000);
+        assertThat(result.getAuthor()).isEqualTo(1);
+        assertThat(result.getImage()).isEqualTo("/image/ad/1");
     }
 
     @Test
-    void toExtendedDto_ShouldMapAdEntityToExtendedAd() {
+    void toExtendedDto_shouldMapAdEntityToExtendedAdDto() {
         UserEntity author = new UserEntity();
-        author.setId(1);
-        author.setFirstName("Ivan");
-        author.setLastName("Ivanov");
-        author.setEmail("user@test.com");
+        author.setId(2);
+        author.setFirstName("Иван");
+        author.setLastName("Иванов");
+        author.setEmail("ivan@example.com");
         author.setPhone("+79991234567");
 
         AdEntity adEntity = new AdEntity();
-        adEntity.setPk(100);
-        adEntity.setTitle("Laptop");
-        adEntity.setPrice(500);
-        adEntity.setDescription("Good condition");
+        adEntity.setPk(1);
+        adEntity.setTitle("Велосипед");
+        adEntity.setPrice(10000);
+        adEntity.setDescription("Как новый");
         adEntity.setAuthor(author);
-        adEntity.setCreatedAt(LocalDateTime.now());
 
-        ExtendedAd dto = adMapper.toExtendedDto(adEntity);
+        ExtendedAd result = mapper.toExtendedDto(adEntity);
 
-        assertNotNull(dto);
-        assertEquals(100, dto.getPk());
-        assertEquals("Laptop", dto.getTitle());
-        assertEquals(500, dto.getPrice());
-        assertEquals("Good condition", dto.getDescription());
-        assertEquals("Ivan", dto.getAuthorFirstName());
-        assertEquals("Ivanov", dto.getAuthorLastName());
-        assertEquals("user@test.com", dto.getEmail());
-        assertEquals("+79991234567", dto.getPhone());
-        assertEquals("/users/1/image", dto.getAuthorImage());
-        assertEquals("/ads/100/image", dto.getImage());
+        assertThat(result.getPk()).isEqualTo(1);
+        assertThat(result.getAuthorFirstName()).isEqualTo("Иван");
+        assertThat(result.getEmail()).isEqualTo("ivan@example.com");
+        assertThat(result.getAuthorImage()).isEqualTo("/image/user/2");
+        assertThat(result.getImage()).isEqualTo("/image/ad/1");
+    }
+
+    @Test
+    void toEntity_shouldMapCreateOrUpdateAdToAdEntity() {
+        CreateOrUpdateAd dto = new CreateOrUpdateAd();
+        dto.setTitle("Велосипед");
+        dto.setPrice(10000);
+        dto.setDescription("Как новый");
+
+        AdEntity result = mapper.toEntity(dto);
+
+        assertThat(result.getTitle()).isEqualTo("Велосипед");
+        assertThat(result.getPrice()).isEqualTo(10000);
+        assertThat(result.getDescription()).isEqualTo("Как новый");
+        assertThat(result.getPk()).isNull();
+        assertThat(result.getAuthor()).isNull();
     }
 }
